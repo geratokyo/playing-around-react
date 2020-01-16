@@ -1,0 +1,49 @@
+/*************************/
+/////// GENERAL VARS //////
+/*************************/
+
+//TODO vars
+
+/*************************/
+/////// CUSTOM VARS ///////
+/*************************/
+
+//TODO vars
+
+/*************************/
+///// TYPOGRAPHY VARS /////
+/*************************/
+
+//TODO vars
+
+/*************************/
+///// COMPONENT CODE //////
+/*************************/
+.interactive-svg-map {
+}
+
+@include SmallDevice {
+    .interactive-svg-map {
+    }
+}
+
+@include MediumDevice {
+    .interactive-svg-map {
+    }
+}
+
+@include OnEmbedDevice() {
+    .interactive-svg-map {
+    }
+}
+
+/*************************/
+/////// CUSTOM CODE ///////
+/*************************/
+//TODO code
+
+#testMap {
+    height: 500px;
+    width: 500px;
+    background-color: black;
+}
