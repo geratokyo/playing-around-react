@@ -20,6 +20,9 @@
 ///// COMPONENT CODE //////
 /*************************/
 .interactive-svg-map {
+    height: 500px;
+    width: 500px;
+    // background-color: black;
 }
 
 @include SmallDevice {
@@ -41,9 +44,3 @@
 /////// CUSTOM CODE ///////
 /*************************/
 //TODO code
-
-#testMap {
-    height: 500px;
-    width: 500px;
-    background-color: black;
-}
