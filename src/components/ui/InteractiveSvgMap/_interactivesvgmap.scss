@@ -20,9 +20,9 @@
 ///// COMPONENT CODE //////
 /*************************/
 .interactive-svg-map {
-    height: 500px;
-    width: 500px;
-    // background-color: black;
+    position: relative;
+    height: 100%;
+    width: 300px;
 }
 
 @include SmallDevice {
@@ -44,3 +44,20 @@
 /////// CUSTOM CODE ///////
 /*************************/
 //TODO code
+.map-tooltip {
+    position: absolute;
+    height: auto;
+    width: auto;
+
+    &--shown {
+        display: flex;
+    }
+
+    z-index: 9999;
+    pointer-events: none;
+    background-color: red;
+}
+
+.cls-1 {
+    fill: red;
+}
