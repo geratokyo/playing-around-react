@@ -44,14 +44,22 @@ export class ContentPage extends React.Component<ContentPageProps, ContentPageSt
         return (
             <div className={"content-page " + cls}>
                 <InteractiveSvgMap
-                    ref={(el) => { this.el = el; }}
                     id={"europe"}
-                    svgImg={testMap4}
+                    svgImg={testMap2}
                     isInteractive={!IS_MOBILE}
-                    tooltip={<h2>Im a tooltip on section: {state.current}</h2>}
-                    eventType={'click|mousemove'}
-                    interChildCls={"cls-1"} //class of interactive elements in svg
-                    interParentId={"testmap4"} //id of svg
+                    tooltip={
+                        {
+                            // height: 100,
+                            // width: 100,
+                            // top: 1,
+                            // left: 1,
+                            cursorBased: true,
+                            element: <p className="map-tooltip__text">Im section: {state.current}</p>
+                        }
+                    }
+                    eventType={'click'}
+                    interChildCls={"st0"} //class of interactive elements in svg
+                    // interParentId={"testMap2"} //id of svg
                     onStateChange={this.handleStateChange}
                     stylesMod={{
                         // object that holds the attribute to change, the value when enabled and disabled(relative to the type of the attribute e.g if color then will be a color string)
@@ -178,8 +186,8 @@ const testMap4 = <svg id="testmap4" className="map-image__locations" xmlns="http
     </g>
 </svg>;
 
-const testMap = <svg
-    id="test1"
+const testMap1 = <svg
+    id="testmap1"
     className="circles-svg circles-svg--europe animated zoomIn delay-1"
     version="1.1"
     viewBox="0 0 500 500"
@@ -247,7 +255,7 @@ const testMap = <svg
     </g>
 </svg>;
 
-const testMap2 = <svg id="svg2985" version="1.1" viewBox="0 0 1000 1200" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" xmlSpace="preserve">
+const testMap2 = <svg id="testMap2" version="1.1" viewBox="0 0 1000 1200" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" xmlSpace="preserve">
     <title>MAPS</title>
     <g id="england">
         <path className="st0" id="somerset" d="M374.9,1016.6c15.9-3.8-0.9,8.2,27.7,8.2c6.4-10.2,15.6,4.4,37.3-26.6&#xA;&#x9;&#x9;c1.4-10.4,29.9,24,27.2-32.1c6.1,1.2,6.7,5.3,11.7-34.9c-8.2-1.8-4.7-15-5.4-28.7c-7.5-6-24.5,10.8-31.4-5.3&#xA;&#x9;&#x9;c-11,13.4-33.3-53.1-66.4,55c14.8-12.2-25.2,2.5-46.4,0.1c-7.7-19.7-84.9-3.1-40.2,20.5c35.6,6.1-13,20.4,39.3,11.7&#xA;&#x9;&#x9;C331.4,1003.2,370.7,996.4,374.9,1016.6z" />

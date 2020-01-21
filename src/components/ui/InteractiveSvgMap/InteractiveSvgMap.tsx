@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as forEach from 'lodash.foreach';
+
 export interface InteractiveSvgMapProps {
     className?: string;
     id: string;
@@ -15,13 +16,12 @@ export interface InteractiveSvgMapProps {
 
     //interactive element classnames
     interChildCls: string;
-    interParentId: string;
 
     //tooltip
-    tooltip?: any;
+    tooltip?: itooltipElement;
 
     //styles
-    stylesMod: any;
+    stylesMod: Dictionary<iStylesMod>;
 
     //funcs
     onStateChange: (e: any) => void;
@@ -29,45 +29,54 @@ export interface InteractiveSvgMapProps {
 }
 
 export interface InteractiveSvgMapState {
+    parentId: string;
     hlgtLoc: string;
-    isTooltipVisible: boolean;
-    toolTipX: number;
-    toolTipY: number;
+    istooltipVisible: boolean;
     actionInEl: boolean;
+    tooltipX: number;
+    tooltipY: number;
 }
 
 export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, InteractiveSvgMapState>{
     el: HTMLDivElement;
-    tooltipStyles;
+    tooltipStyles: any;
     constructor(p: InteractiveSvgMapProps) {
         super(p);
         this.state = {
+            parentId: "",
             hlgtLoc: "",
-            isTooltipVisible: false,
-            toolTipX: 0,
-            toolTipY: 0,
+            istooltipVisible: false,
             actionInEl: false,
+            tooltipX: 0,
+            tooltipY: 0,
         }
     }
 
     componentDidMount() {
-        if ((this.props.eventType == 'click' || this.props.eventType == 'click|mousemove') && this.props.isInteractive) {
-            document.addEventListener('click', (ev) => this.handleOutOfBounds(ev, this.props.interParentId));
-        }
+        var svgId = this.props.svgImg.props.id;
+        this.setState({
+            parentId: svgId
+        });
 
         this.tooltipStyles = {
-            top: `${Math.round(this.state.toolTipY) - 50 - 10}px`,
-            left: `${Math.round(this.state.toolTipX) - 50 / 2}px`,
+            height: `${this.props.tooltip.height ? this.props.tooltip.height + "px" : "auto"}`,
+            width: `${this.props.tooltip.width ? this.props.tooltip.width + "px" : "auto"}`,
+        }
+
+        if ((this.props.eventType == 'click' || this.props.eventType == 'click|mousemove') && this.props.isInteractive) {
+            document.addEventListener('click', (ev) => this.handleOutOfBounds(ev, this.state.parentId));
         }
     }
 
     componentDidUpdate(prevProps: InteractiveSvgMapProps, prevState: InteractiveSvgMapState) {
         if (this.props.isInteractive) {
-            if ((prevState.toolTipX !== this.state.toolTipX) || (prevState.toolTipY !== this.state.toolTipY)) {
-                this.tooltipStyles = {
-                    top: `${Math.round(this.state.toolTipY) - 50 - 10}px`,
-                    left: `${Math.round(this.state.toolTipX) - 50 / 2}px`,
-                }
+            if ((prevState.tooltipX !== this.state.tooltipX) || (prevState.tooltipY !== this.state.tooltipY)) {
+                this.tooltipStyles = this.props.tooltip.cursorBased ? {
+                    ...this.tooltipStyles,
+                    top: `${this.props.tooltip.top ? Math.round(this.state.tooltipY - this.props.tooltip.top) : Math.round(this.state.tooltipY - 50)}px`, // - height/10
+                    left: `${this.props.tooltip.left ? Math.round(this.state.tooltipX - this.props.tooltip.left) : Math.round(this.state.tooltipX - 25)}px`, // - width/2
+                } :
+                    {}
             }
         }
 
@@ -109,7 +118,7 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
             if (els.isValidLoc && this.state.hlgtLoc !== els.tId) {
                 this.props.onStateChange(els.tId); //pass current id to parent component
                 this.setState({
-                    hlgtLoc: els.tId
+                    hlgtLoc: els.tId,
                 });
 
                 //apply styles for each element
@@ -121,7 +130,7 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                 });
 
                 if (this.props.tooltip) {
-                    this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
+                    this.showtooltip(ev.clientX, ev.clientY, this.state.parentId);
                 }
             } else {
                 this.props.onStateChange("");
@@ -138,7 +147,7 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                 if (hasClick === false) {
                     this.props.onStateChange(els.tId); //pass current id to parent component
                     this.setState({
-                        hlgtLoc: els.tId
+                        hlgtLoc: els.tId,
                     });
                 }
 
@@ -147,7 +156,7 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                     if (hasClick === false) {
                         item.id !== els.tId ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueEnabled"];
                         if (this.props.tooltip) {
-                            this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
+                            this.showtooltip(ev.clientX, ev.clientY, this.state.parentId);
                         }
                     } else {
                         (item.id !== els.tId || (els.tId !== this.state.hlgtLoc && this.state.hlgtLoc !== "")) ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : "";
@@ -183,27 +192,25 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
         }
     }
 
-    showToolTip = (x, y, parentId) => {
+    showtooltip = (x, y, parentId) => {
         let parentTop = document.getElementById(parentId).getBoundingClientRect().top;
         let parentLeft = document.getElementById(parentId).getBoundingClientRect().left;
         let top = y - parentTop;
         let left = x - parentLeft;
 
         this.setState({
-            isTooltipVisible: true,
-            toolTipX: left,
-            toolTipY: top
+            istooltipVisible: true,
+            tooltipX: left,
+            tooltipY: top
         })
     }
 
     clearEffect = (ev, keepClicked: boolean, eventType?) => {
         if (this.props.isInteractive) {
-            let evType = eventType ? eventType : this.props.eventType;
-
             if (keepClicked === false) {
                 this.setState({
                     hlgtLoc: "",
-                    isTooltipVisible: false
+                    istooltipVisible: false
                 });
                 this.props.onStateChange("");
             }
@@ -221,7 +228,7 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
     }
 
     componentWillUnmount() {
-        document.removeEventListener(this.props.eventType, (ev) => this.handleOutOfBounds(ev, this.props.interParentId));
+        document.removeEventListener(this.props.eventType, (ev) => this.handleOutOfBounds(ev, this.state.parentId));
     }
 
     render() {
@@ -242,12 +249,13 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                 }
                 {/* tooltip */}
                 {
-                    props.tooltip ?
+                    props.tooltip.element ?
                         <div
-                            className={"map-tooltip " + cls + (!state.isTooltipVisible ? "hide" : "map-tooltip--shown")}
+                            id="map-tooltip"
+                            className={"map-tooltip " + cls + (!state.istooltipVisible ? "hide" : "map-tooltip--shown")}
                             style={this.tooltipStyles}
                         >
-                            {props.tooltip}
+                            {props.tooltip.element}
                         </div>
                         :
                         ""
@@ -256,4 +264,22 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
             </div >
         )
     }
+}
+
+interface Dictionary<T> {
+    [idx: string]: T;
+}
+interface iStylesMod {
+    attr: string;
+    valueEnabled: string;
+    valueDisabled: string;
+    valueDefault: string;
+}
+interface itooltipElement {
+    height?: number;
+    width?: number;
+    top?: number;
+    left?: number;
+    cursorBased?: boolean;
+    element?: React.ReactElement;
 }

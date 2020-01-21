@@ -21,8 +21,9 @@
 /*************************/
 .interactive-svg-map {
     position: relative;
-    height: 100%;
-    width: 300px;
+    height: auto;
+    width: 400px;
+    overflow: visible;
 }
 
 @include SmallDevice {
@@ -46,16 +47,28 @@
 //TODO code
 .map-tooltip {
     position: absolute;
-    height: auto;
-    width: auto;
 
     &--shown {
         display: flex;
     }
 
+    &--hidden {
+        opacity: 0;
+    }
+
+    &--disabled {
+        opacity: 0;
+    }
+
     z-index: 9999;
     pointer-events: none;
     background-color: purple;
+
+    &__text {
+        font-size: 15px;
+        color: white;
+        padding: 0px;
+    }
 }
 
 .cls-1 {
