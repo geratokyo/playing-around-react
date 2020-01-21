@@ -48,7 +48,7 @@ export class ContentPage extends React.Component<ContentPageProps, ContentPageSt
                     id={"europe"}
                     svgImg={testMap4}
                     isInteractive={!IS_MOBILE}
-                    // tooltip={<h2>Im a tooltip on section: {state.current}</h2>}
+                    tooltip={<h2>Im a tooltip on section: {state.current}</h2>}
                     eventType={'click|mousemove'}
                     interChildCls={"cls-1"} //class of interactive elements in svg
                     interParentId={"testmap4"} //id of svg

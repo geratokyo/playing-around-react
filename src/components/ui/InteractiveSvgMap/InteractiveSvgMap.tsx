@@ -14,8 +14,8 @@ export interface InteractiveSvgMapProps {
     eventType: 'click' | 'mousemove' | 'click|mousemove';
 
     //interactive element classnames
-    interChildCls?: string;
-    interParentId?: string;
+    interChildCls: string;
+    interParentId: string;
 
     //tooltip
     tooltip?: any;
@@ -34,17 +34,11 @@ export interface InteractiveSvgMapState {
     toolTipX: number;
     toolTipY: number;
     actionInEl: boolean;
-    currEvent: '' | 'click' | 'mousemove';
-    keepLast: boolean;
-
 }
 
 export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, InteractiveSvgMapState>{
     el: HTMLDivElement;
-    hlgtLoc; // location id - this will be updated with the state so it can be used outside of the component
-    hlgtMap; // mapId - this will be updated with the state so it can be used outside of the component
     tooltipStyles;
-    evTypes;
     constructor(p: InteractiveSvgMapProps) {
         super(p);
         this.state = {
@@ -53,8 +47,6 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
             toolTipX: 0,
             toolTipY: 0,
             actionInEl: false,
-            currEvent: '',
-            keepLast: false
         }
     }
 
@@ -67,8 +59,6 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
             top: `${Math.round(this.state.toolTipY) - 50 - 10}px`,
             left: `${Math.round(this.state.toolTipX) - 50 / 2}px`,
         }
-
-        this.evTypes = this.props.eventType.split("|");
     }
 
     componentDidUpdate(prevProps: InteractiveSvgMapProps, prevState: InteractiveSvgMapState) {
@@ -83,33 +73,51 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
 
     }
 
-    handleClick = (ev: any) => {
+    getElements = (ev) => {
+        // current target vars(parent)
+        let cTarget = ev.currentTarget as any;
+        let cClass = cTarget.nodeName !== "DIV" ? cTarget.className.baseVal : cTarget.className;
+        let cId = cTarget.id;
+
+        //target vars (trigger element)
+        let target = ev.target as any;
+        let tClass = target.nodeName !== "DIV" ? target.className.baseVal : target.className;
+        let tId = target.id;
+
+        //list of interactive elements
+        let interEls = document.getElementsByClassName(this.props.interChildCls);
+
+        // target element is a valid interactive element or not
+        let isValidLoc = tClass.indexOf(this.props.interChildCls) !== -1;
+
+        return {
+            cTarget,
+            cClass,
+            cId,
+            target,
+            tClass,
+            tId,
+            interEls,
+            isValidLoc,
+        }
+    }
+
+    handleClick = (ev: any, hasHover: boolean) => {
         if (this.props.isInteractive) {
-            // current target vars(parent)
-            let cTarget = ev.currentTarget as any;
-            let cClass = cTarget.nodeName !== "DIV" ? cTarget.className.baseVal : cTarget.className;
-            let cId = cTarget.id;
+            var els = this.getElements(ev);
 
-            //target vars (trigger element)
-            let target = ev.target as any;
-            let tClass = target.nodeName !== "DIV" ? target.className.baseVal : target.className;
-            let tId = target.id;
-
-            //list of interactive elements
-            let interEls = document.getElementsByClassName(this.props.interChildCls);
-
-            let isValidLoc = tClass.indexOf(this.props.interChildCls) !== -1;
-            // let isContinent = tClass.indexOf("circles-svg") !== -1;
-
-            if (isValidLoc && this.state.hlgtLoc !== tId) {
-                this.props.onStateChange(tId); //pass current id to parent component
+            if (els.isValidLoc && this.state.hlgtLoc !== els.tId) {
+                this.props.onStateChange(els.tId); //pass current id to parent component
                 this.setState({
-                    hlgtLoc: tId
+                    hlgtLoc: els.tId
                 });
 
                 //apply styles for each element
-                forEach(interEls, item => {
-                    item.id !== tId ? item.style[this.props.stylesMod[this.props.eventType]["attr"]] = this.props.stylesMod[this.props.eventType]["valueDisabled"] : item.style[this.props.stylesMod[this.props.eventType]["attr"]] = this.props.stylesMod[this.props.eventType]["valueEnabled"];
+                forEach(els.interEls, item => {
+                    item.id !== els.tId ? item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueDisabled"] : item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueEnabled"];
+                    if (hasHover) {
+                        item.id !== els.tId ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : "";
+                    }
                 });
 
                 if (this.props.tooltip) {
@@ -120,113 +128,42 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                 this.clearEffect(ev, false, 'click');
             }
         }
-
     }
 
-    handleHover = (ev: any) => {
+    handleHover = (ev: any, hasClick: boolean) => {
         if (this.props.isInteractive) {
-            // current target vars(parent)
-            let cTarget = ev.currentTarget as any;
-            let cClass = cTarget.nodeName !== "DIV" ? cTarget.className.baseVal : cTarget.className;
-            let cId = cTarget.id;
+            var els = this.getElements(ev);
 
-            //target vars (trigger element)
-            let target = ev.target as any;
-            let tClass = target.nodeName !== "DIV" ? target.className.baseVal : target.className;
-            let tId = target.id;
-
-            //list of interactive elements
-            let interEls = document.getElementsByClassName(this.props.interChildCls);
-
-            let isValidLoc = tClass.indexOf(this.props.interChildCls) !== -1;
-            // let isContinent = tClass.indexOf("circles-svg") !== -1;
-
-            if (isValidLoc) {
-                this.props.onStateChange(tId); //pass current id to parent component
-                this.setState({
-                    hlgtLoc: tId
-                });
+            if (els.isValidLoc) {
+                if (hasClick === false) {
+                    this.props.onStateChange(els.tId); //pass current id to parent component
+                    this.setState({
+                        hlgtLoc: els.tId
+                    });
+                }
 
                 //apply styles for each element
-                forEach(interEls, item => {
-                    item.id !== tId ? item.style[this.props.stylesMod[this.props.eventType]["attr"]] = this.props.stylesMod[this.props.eventType]["valueDisabled"] : item.style[this.props.stylesMod[this.props.eventType]["attr"]] = this.props.stylesMod[this.props.eventType]["valueEnabled"];
+                forEach(els.interEls, item => {
+                    if (hasClick === false) {
+                        item.id !== els.tId ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueEnabled"];
+                        if (this.props.tooltip) {
+                            this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
+                        }
+                    } else {
+                        (item.id !== els.tId || (els.tId !== this.state.hlgtLoc && this.state.hlgtLoc !== "")) ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : "";
+                        item.id == els.tId ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueEnabled"] : "";
+                        item.id == this.state.hlgtLoc ? item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueEnabled"] : "";
+                    }
                 });
 
-                if (this.props.tooltip) {
-                    this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
-                }
             } else {
-                this.props.onStateChange("");
-                this.clearEffect(ev, false, 'mousemove');
-            }
-        }
-    }
-
-    handleBoth = (ev) => {
-        if (this.props.isInteractive) {
-            // current target vars(parent)
-            let cTarget = ev.currentTarget as any;
-            let cClass = cTarget.nodeName !== "DIV" ? cTarget.className.baseVal : cTarget.className;
-            let cId = cTarget.id;
-
-            //target vars (trigger element)
-            let target = ev.target as any;
-            let tClass = target.nodeName !== "DIV" ? target.className.baseVal : target.className;
-            let tId = target.id;
-
-            //list of interactive elements
-            let interEls = document.getElementsByClassName(this.props.interChildCls);
-
-            let isValidLoc = tClass.indexOf(this.props.interChildCls) !== -1;
-            // let isContinent = tClass.indexOf("circles-svg") !== -1;
-
-            var clickedEl;
-
-            if (ev.type == 'click') {
-                if (isValidLoc) {
-                    this.props.onStateChange(tId); //pass current id to parent component
-                    this.setState({
-                        hlgtLoc: tId,
-                        currEvent: 'click',
-                    });
-
-                    clickedEl = tId;
-
-                    //apply styles for each element
-                    forEach(interEls, item => {
-                        item.id !== tId ? item.style[this.props.stylesMod[ev.type]["attr"]] = this.props.stylesMod[ev.type]["valueDisabled"] : item.style[this.props.stylesMod[ev.type]["attr"]] = this.props.stylesMod[ev.type]["valueEnabled"];
-                        item.id !== tId ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDisabled"] : "";
-                    });
-
-                    if (this.props.tooltip) {
-                        this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
-                    }
-                } else {
+                if (hasClick === false) {
                     this.props.onStateChange("");
-                    this.clearEffect(ev, false, 'click');
-                }
-            }
-
-            if (ev.type == 'mousemove') {
-                if (isValidLoc) {
-                    this.setState({
-                        currEvent: 'mousemove'
-                    });
-
-                    forEach(interEls, item => {
-                        (item.id !== tId || (tId !== this.state.hlgtLoc && this.state.hlgtLoc !== "")) ? item.style[this.props.stylesMod[ev.type]["attr"]] = this.props.stylesMod[ev.type]["valueDisabled"] : "";
-                        item.id == tId ? item.style[this.props.stylesMod[ev.type]["attr"]] = this.props.stylesMod[ev.type]["valueEnabled"] : "";
-                        item.id == this.state.hlgtLoc ? item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueEnabled"] : "";
-                    });
-
-                    if (this.props.tooltip) {
-                        this.showToolTip(ev.clientX, ev.clientY, this.props.interParentId);
-                    }
+                    this.clearEffect(ev, false, 'mousemove');
                 } else {
                     this.clearEffect(ev, true, 'mousemove');
                 }
             }
-
         }
     }
 
@@ -268,21 +205,16 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                     hlgtLoc: "",
                     isTooltipVisible: false
                 });
-                this.props.onStateChange("")
-            } else {
-                this.setState({
-                    isTooltipVisible: false
-                })
+                this.props.onStateChange("");
             }
-
 
             if (keepClicked === false) {
                 forEach(document.getElementsByClassName(this.props.interChildCls), item => (
-                    item.style[this.props.stylesMod[evType]["attr"]] = this.props.stylesMod[evType]["valueDefault"]
+                    item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueDefault"]
                 ))
             } else {
                 forEach(document.getElementsByClassName(this.props.interChildCls), item => (
-                    item.id !== this.state.hlgtLoc ? item.style[this.props.stylesMod[evType]["attr"]] = this.props.stylesMod[evType]["valueDefault"] : ""
+                    item.id !== this.state.hlgtLoc ? item.style[this.props.stylesMod['mousemove']["attr"]] = this.props.stylesMod['mousemove']["valueDefault"] : item.style[this.props.stylesMod['click']["attr"]] = this.props.stylesMod['click']["valueEnabled"]
                 ));
             }
         }
@@ -301,9 +233,9 @@ export class InteractiveSvgMap extends React.Component<InteractiveSvgMapProps, I
                 id={props.id}
                 className={"interactive-svg-map " + cls}
                 ref={e => this.el = e}
-                onClick={props.eventType == 'click' ? (ev) => this.handleClick(ev) : props.eventType == 'click|mousemove' ? (ev) => this.handleBoth(ev) : null}
-                onMouseMove={props.eventType == 'mousemove' ? (ev) => this.handleHover(ev) : props.eventType == 'click|mousemove' ? (ev) => this.handleBoth(ev) : null}
-                onMouseOut={props.eventType == 'mousemove' ? (ev) => this.clearEffect(ev, false) : null}
+                onClick={props.eventType == 'click' ? (ev) => this.handleClick(ev, false) : props.eventType == 'click|mousemove' ? (ev) => this.handleClick(ev, true) : null}
+                onMouseMove={props.eventType == 'mousemove' ? (ev) => this.handleHover(ev, false) : props.eventType == 'click|mousemove' ? (ev) => this.handleHover(ev, true) : null}
+                onMouseOut={props.eventType == 'mousemove' ? (ev) => this.clearEffect(ev, false) : props.eventType == 'click|mousemove' ? (ev) => this.clearEffect(ev, true) : null}
             >
                 {
                     props.svgImg
