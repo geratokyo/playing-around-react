@@ -49,15 +49,17 @@ export class ContentPage extends React.Component<ContentPageProps, ContentPageSt
                     isInteractive={!IS_MOBILE}
                     tooltip={
                         {
+                            className: "testmap-tooltip",
                             // height: 100,
                             // width: 100,
                             // top: 1,
-                            // left: 1,
+                            // left: 50,
+                            transition: "all 1s",
                             cursorBased: true,
                             element: <p className="map-tooltip__text">Im section: {state.current}</p>
                         }
                     }
-                    eventType={'click'}
+                    eventType={'click|mousemove'}
                     interChildCls={"st0"} //class of interactive elements in svg
                     // interParentId={"testMap2"} //id of svg
                     onStateChange={this.handleStateChange}
@@ -67,13 +69,15 @@ export class ContentPage extends React.Component<ContentPageProps, ContentPageSt
                             attr: "fill",
                             valueEnabled: "blue",
                             valueDisabled: "red",
-                            valueDefault: "red"
+                            valueDefault: "red",
+                            transition: "all 1s", //optional
                         },
                         mousemove: {
                             attr: "fill",
                             valueEnabled: "green",
                             valueDisabled: "red",
-                            valueDefault: "red"
+                            valueDefault: "red",
+                            transition: "all 0.2s", //optional
                         }
                     }}
                     customOnClick={() => console.log("11213")}

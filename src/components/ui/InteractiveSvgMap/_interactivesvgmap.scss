@@ -1,24 +1,3 @@
-/*************************/
-/////// GENERAL VARS //////
-/*************************/
-
-//TODO vars
-
-/*************************/
-/////// CUSTOM VARS ///////
-/*************************/
-
-//TODO vars
-
-/*************************/
-///// TYPOGRAPHY VARS /////
-/*************************/
-
-//TODO vars
-
-/*************************/
-///// COMPONENT CODE //////
-/*************************/
 .interactive-svg-map {
     position: relative;
     height: auto;
@@ -26,37 +5,16 @@
     overflow: visible;
 }
 
-@include SmallDevice {
-    .interactive-svg-map {
-    }
-}
-
-@include MediumDevice {
-    .interactive-svg-map {
-    }
-}
-
-@include OnEmbedDevice() {
-    .interactive-svg-map {
-    }
-}
-
-/*************************/
-/////// CUSTOM CODE ///////
-/*************************/
-//TODO code
 .map-tooltip {
     position: absolute;
 
     &--shown {
         display: flex;
+        opacity: 1;
     }
 
     &--hidden {
-        opacity: 0;
-    }
-
-    &--disabled {
+        display: none;
         opacity: 0;
     }
 
@@ -71,7 +29,7 @@
     }
 }
 
-.cls-1 {
+.st0 {
     fill: red;
 }
 
